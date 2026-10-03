@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مسابقة السيرة النبوية العطرة</title>
+  <style>
+    :root {
+      --primary: #2d8f6d;
+      --secondary: #e8f5e9;
+      --accent: #ffb703;
+      --danger: #e63946;
+      --text: #264653;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #d8f3dc, #b7e4c7);
+      margin: 0; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      background: var(--white);
+      max-width: 600px; width: 100%;
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      padding: 24px;
+      text-align: center;
+    }
+    .badge {
+      background: var(--secondary);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    h2 { color: var(--text); font-size: 1.25rem; line-height: 1.6; margin: 12px 0 20px; }
+    .options { display: grid; gap: 12px; }
+    button.opt-btn {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      color: #333;
+      cursor: pointer;
+      text-align: right;
+      transition: all 0.2s ease;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    button.opt-btn:hover:not(:disabled) {
+      background: #eaf4f0;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    button.opt-btn.correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724; font-weight: bold; }
+    button.opt-btn.wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+    .footer-bar { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .next-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+    .progress {
+      height: 8px; width: 100%;
+      background: #e9ecef;
+      border-radius: 4px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+    .score-box { font-size: 1.4rem; font-weight: bold; color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="card" id="quiz-container">
+  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+  <span class="badge" id="category">المقدمة</span>
+  <h2 id="question">جاري تحميل السؤال...</h2>
+  <div class="options" id="options"></div>
+  <div class="footer-bar">
+    <span id="counter" style="color: #6c757d; font-size: 0.9rem;">السؤال 1 من 10</span>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">التالي ⬅</button>
+  </div>
+</div>
+
+<script>
+const quizData = [
+  {
+    cat: "المقدمة",
+    q: "1. ما هو المعنى الغالب لمصطلح «السِّيرة النبوية» عند المسلمين؟",
+    opts: ["حياة الرسول محمد ﷺ وتفاصيلها", "قصص الأمم والشعوب القديمة", "تاريخ التجارة عند العرب"],
+    ans: 0
+  },
+  {
+    cat: "المقدمة",
+    q: "2. لِمَاذا اهتمّ المسلمون بتدوين أدقّ تفاصيل حياة النبي ﷺ صَغيرِها وكَبيرِها؟",
+    opts: ["حتى لا يجد أحدٌ مطعناً في رسالته ﷺ لجهالة شيء منها", "ليكون مجرد كتاب للتسلية", "لتسجيل تاريخ الملوك ورؤساء القبائل"],
+    ans: 0
+  },
+  {
+    cat: "الدرس الأول: ولادة النبي ﷺ",
+    q: "3. إِلامَ كان يدعو الرسول ﷺ بعد انتشار الجهل والضلال؟",
+    opts: ["جمع الأموال والتجارة", "التوحيد وعبادة الله وحده", "التفاخر بالأنساب"],
+    ans: 1
+  },
+  {
+    cat: "الدرس الأول: ولادة النبي ﷺ",
+    q: "4. مَن هو الجيش الذي أهلكه الله حين حاول هدم الكعبة المشرّفة؟",
+    opts: ["جيش الروم", "جيش الأحابيش الذين جاءوا بالفيلة", "جيش الفُرس"],
+    ans: 1
+  },
+  {
+    cat: "الدرس الأول: ولادة النبي ﷺ",
+    q: "5. في أيّ مدينة مباركة وُلِدَ نبينا محمد ﷺ؟",
+    opts: ["مكة المكرمة", "المدينة المنورة", "القدس الشريف"],
+    ans: 0
+  },
+  {
+    cat: "الدرس الأول: ولادة النبي ﷺ",
+    q: "6. في أيّ عام وُلِدَ نبيّ الرحمة ﷺ؟",
+    opts: ["عام الحزن", "عام الفيل (٥٧١م)", "عام الوفود"],
+    ans: 1
+  },
+  {
+    cat: "الدرس الأول: ولادة النبي ﷺ",
+    q: "7. في أيّ يوم وشهر وُلِدَ النبي ﷺ على الرأي المشهور؟",
+    opts: ["فجر يوم الاثنين، 12 من ربيع الأول", "فجر يوم الجمعة، في رمضان", "يوم الأحد، في شوال"],
+    ans: 0
+  },
+  {
+    cat: "الدرس الأول: ولادة النبي ﷺ",
+    q: "8. ما هي إحدى العلامات (الخوارق) التي رأتها أُمّه «آمنة» عند ولادته ﷺ؟",
+    opts: ["نورٌ أضاء قصور الشام", "انفجار عيون الماء في مكة", "تساقط أمطار غزيرة وثلوج"],
+    ans: 0
+  },
+  {
+    cat: "الدرس الأول: نسب النبي ﷺ",
+    q: "9. ينتهي نسبه الشريف لإسماعيل بن إبراهيم عليهما السلام، فما اسم والده وجده المباشر؟",
+    opts: ["محمد بن عبد الله بن عبد المطلب", "محمد بن أبي طالب بن هاشم", "محمد بن وهب بن عبد مناف"],
+    ans: 0
+  },
+  {
+    cat: "الدرس الأول: نسب النبي ﷺ",
+    q: "10. مَن هي أُمّ النبي محمد ﷺ الكريمة؟",
+    opts: ["السيدة آمنة بنت وهب", "السيدة خديجة بنت خويلد", "السيدة حليمة السعدية"],
+    ans: 0
+  }
+];
+
+let curIdx = 0;
+let score = 0;
+
+function loadQuestion() {
+  const q = quizData[curIdx];
+  document.getElementById("category").textContent = q.cat;
+  document.getElementById("question").textContent = q.q;
+  document.getElementById("counter").textContent = `السؤال ${curIdx + 1} من ${quizData.length}`;
+  document.getElementById("progress-bar").style.width = `${((curIdx) / quizData.length) * 100}%`;
+  document.getElementById("next-btn").style.display = "none";
+  
+  const optsContainer = document.getElementById("options");
+  optsContainer.innerHTML = "";
+  
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerHTML = `<span>${opt}</span><span class="icon"></span>`;
+    btn.onclick = () => selectAnswer(i, btn);
+    optsContainer.appendChild(btn);
+  });
+}
+
+function selectAnswer(chosenIdx, btn) {
+  const q = quizData[curIdx];
+  const allBtns = document.querySelectorAll(".opt-btn");
+  allBtns.forEach(b => b.disabled = true);
+  
+  if(chosenIdx === q.ans) {
+    btn.classList.add("correct");
+    score++;
+  } else {
+    btn.classList.add("wrong");
+    allBtns[q.ans].classList.add("correct");
+  }
+  document.getElementById("next-btn").style.display = "inline-block";
+}
+
+function nextQuestion() {
+  curIdx++;
+  if(curIdx < quizData.length) {
+    loadQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  const container = document.getElementById("quiz-container");
+  const percent = Math.round((score / quizData.length) * 100);
+  let feedback = "ممتاز جداً وبطل في السيرة النبوية! 🌟";
+  if(percent < 60) feedback = "أحسنت المحاولة! راجع الدرس جيداً وأعد التجربة لتكون بطلاً 💡";
+  else if(percent < 85) feedback = "عمل رائع ومتميز جداً! أحسنت 👏";
+
+  container.innerHTML = `
+    <h2 style="font-size: 1.8rem; color: var(--primary);">انتهت المسابقة! 🎉</h2>
+    <p style="font-size: 1.1rem; color: #555;">${feedback}</p>
+    <div class="score-box" style="margin: 24px 0; padding: 20px; background: var(--secondary); border-radius: 16px;">
+      نتيجتك: ${score} من ${quizData.length} (${percent}%)
+    </div>
+    <button class="next-btn" style="display:inline-block;" onclick="location.reload()">إعادة المسابقة 🔄</button>
+  `;
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
